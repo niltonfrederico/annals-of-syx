@@ -1,5 +1,3 @@
-# annals-of-syx
-
 ![Annals of Syx](docs/assets/header.svg)
 
 Standalone Java CLI that reads a *Songs of Syx* `.save` and writes a JSON
@@ -19,6 +17,12 @@ Tested against **Songs of Syx v0.70.33**.
 > produced by or affiliated with the authors of *Songs of Syx*, and does
 > not distribute any part of the game. See [`DISCLAIMER.md`](DISCLAIMER.md)
 > and [buy the game](DISCLAIMER.md#buy-the-game) if you find this useful.
+
+## Personal Disclaimer and Contributing
+
+This exists because I'm a **numbers nerd** going through my "reverse-engineering phase". I'm no Java developer, and the code shows it — even with the help of my AI despots. If you want to pitch in (or just have ideas that would actually work), [contributions are welcome](https://github.com/niltonfrederico/annals-of-syx/issues). Check [ROADMAP.md](ROADMAP.md) for what's on the table, and the [Contributor Covenant](https://www.contributor-covenant.org/version/3/0/code_of_conduct/) for how we behave around here.
+
+Hail to you, mighty despot!
 
 ## Setup
 
