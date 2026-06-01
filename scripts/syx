@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# scripts/syx — user-facing entrypoint.
+#
+# Why this wrapper exists:
+#   - Bootstrap (engine) reads `base/{data.zip,locale.zip,...}` from CWD.
+#     Java has no native chdir, so we have to cd before launching the JVM.
+#   - We still want output to land in the user's *original* CWD, so we
+#     export SYX_INVOKE_CWD; Syx reads it as the default output dir.
+#   - xvfb-run is required because CORE.create() opens a real GLFW window
+#     via LWJGL, even in our headless flow.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# shellcheck disable=SC2012
+JAR="$(ls "$REPO_ROOT"/build/libs/annals-of-syx*-all.jar 2>/dev/null | head -n1 || true)"
+if [[ -z "$JAR" ]]; then
+  printf 'syx: no shadow jar found under %s/build/libs/. Run ./scripts/build.sh first.\n' \
+    "$REPO_ROOT" >&2
+  exit 1
+fi
+
+SYX_HOME="${SYX_HOME:-$HOME/.syx}"
+mkdir -p "$SYX_HOME/source"
+
+export SYX_INVOKE_CWD="$PWD"
+cd "$SYX_HOME/source"
+
+# Engine's ScriptLoad uses getSystemClassLoader().loadClass(name) to
+# resolve script classes, so base/script/*.jar must be on the JVM
+# classpath at launch (not just discoverable on disk). Using `-cp`
+# with the glob instead of `-jar` for that reason.
+exec xvfb-run -a java -cp "$JAR:base/script/*" dumper.cli.Syx "$@"

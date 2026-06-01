@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="Annals of Syx">
+  <title>Annals of Syx (mono)</title>
+  <desc>Monochrome variant of the annals-of-syx header — for README badges and dark contexts.</desc>
+
+  <defs>
+    <symbol id="wedgeMono" viewBox="0 0 20 16">
+      <polygon points="0,8 16,0 20,8 16,16" fill="currentColor"/>
+    </symbol>
+  </defs>
+
+  <g color="#d8c8b0">
+    <rect x="0" y="20" width="1200" height="2" fill="currentColor"/>
+    <rect x="0" y="278" width="1200" height="2" fill="currentColor"/>
+
+    <g transform="translate(60,38)">
+      <use href="#wedgeMono" x="0"   y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="30"  y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="60"  y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="90"  y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="120" y="0" width="20" height="16"/>
+    </g>
+    <g transform="translate(960,38)">
+      <use href="#wedgeMono" x="0"   y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="30"  y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="60"  y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="90"  y="0" width="20" height="16"/>
+      <use href="#wedgeMono" x="120" y="0" width="20" height="16"/>
+    </g>
+
+    <g text-anchor="middle">
+      <text x="600" y="158"
+            font-family="'Trajan Pro','Cinzel','Cormorant Garamond','Times New Roman',serif"
+            font-size="92" font-weight="700" letter-spacing="14"
+            fill="currentColor">
+        ANNALS OF SYX
+      </text>
+      <text x="600" y="200"
+            font-family="'Cinzel','Cormorant Garamond','Times New Roman',serif"
+            font-size="20" font-weight="500" letter-spacing="10"
+            fill="currentColor" fill-opacity="0.75">
+        a song of syx save analyzer
+      </text>
+    </g>
+
+    <g transform="translate(420,242)">
+      <use href="#wedgeMono" x="0"   y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="24"  y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="48"  y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="72"  y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="96"  y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="120" y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="144" y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="168" y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="192" y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="216" y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="240" y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="264" y="0" width="16" height="12"/>
+      <use href="#wedgeMono" x="288" y="0" width="16" height="12"/>
+    </g>
+  </g>
+</svg>

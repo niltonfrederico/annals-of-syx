@@ -1,0 +1,24 @@
+annals-of-syx
+Copyright (C) 2026 annals-of-syx contributors
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License version 3 as
+published by the Free Software Foundation. See the LICENSE file for the
+full text.
+
+================================================================================
+THIRD-PARTY NOTICE — Song of Syx
+================================================================================
+
+annals-of-syx is an independent, unofficial tool. It is NOT produced by,
+endorsed by, or affiliated with the authors or publishers of Song of Syx.
+
+Song of Syx is a city-building strategy game created and published by
+Jakob "Gamatron" Tholander under Bonte Games. All game assets, code, art,
+music, lore, and trademarks are property of their respective authors.
+
+This repository does NOT distribute any part of Song of Syx. Running
+annals-of-syx requires the user to own a legitimate copy of the game and
+provide their own SongsOfSyx.jar and game data files.
+
+See DISCLAIMER.md for full text and store links.

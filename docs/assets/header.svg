@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="Annals of Syx">
+  <title>Annals of Syx</title>
+  <desc>annals-of-syx — a Songs of Syx save analyzer. Babylonian-inspired terracotta and gold banner.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a1a10"/>
+      <stop offset="100%" stop-color="#1a100a"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8c068"/>
+      <stop offset="100%" stop-color="#b88838"/>
+    </linearGradient>
+    <pattern id="brickwork" x="0" y="0" width="80" height="40" patternUnits="userSpaceOnUse">
+      <rect width="80" height="40" fill="#3a2418" opacity="0.0"/>
+      <rect x="0" y="0" width="78" height="18" fill="#4a2a18" opacity="0.18"/>
+      <rect x="40" y="20" width="78" height="18" fill="#4a2a18" opacity="0.18"/>
+      <rect x="-40" y="20" width="78" height="18" fill="#4a2a18" opacity="0.18"/>
+    </pattern>
+    <!-- Cuneiform-inspired wedge -->
+    <symbol id="wedge" viewBox="0 0 20 16">
+      <polygon points="0,8 16,0 20,8 16,16" fill="url(#goldGrad)"/>
+    </symbol>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="300" fill="url(#bg)"/>
+  <rect width="1200" height="300" fill="url(#brickwork)"/>
+
+  <!-- Top/bottom ornamental rails -->
+  <rect x="0" y="20" width="1200" height="3" fill="url(#goldGrad)"/>
+  <rect x="0" y="277" width="1200" height="3" fill="url(#goldGrad)"/>
+
+  <!-- Cuneiform-inspired wedge frieze, top -->
+  <g transform="translate(60,38)">
+    <use href="#wedge" x="0"   y="0" width="20" height="16"/>
+    <use href="#wedge" x="30"  y="0" width="20" height="16"/>
+    <use href="#wedge" x="60"  y="0" width="20" height="16"/>
+    <use href="#wedge" x="90"  y="0" width="20" height="16"/>
+    <use href="#wedge" x="120" y="0" width="20" height="16"/>
+  </g>
+  <g transform="translate(960,38)">
+    <use href="#wedge" x="0"   y="0" width="20" height="16"/>
+    <use href="#wedge" x="30"  y="0" width="20" height="16"/>
+    <use href="#wedge" x="60"  y="0" width="20" height="16"/>
+    <use href="#wedge" x="90"  y="0" width="20" height="16"/>
+    <use href="#wedge" x="120" y="0" width="20" height="16"/>
+  </g>
+
+  <!-- Title -->
+  <g text-anchor="middle">
+    <text x="600" y="158"
+          font-family="'Trajan Pro','Cinzel','Cormorant Garamond','Times New Roman',serif"
+          font-size="92" font-weight="700" letter-spacing="14"
+          fill="url(#goldGrad)"
+          stroke="#6a3a18" stroke-width="1.2">
+      ANNALS OF SYX
+    </text>
+    <text x="600" y="200"
+          font-family="'Cinzel','Cormorant Garamond','Times New Roman',serif"
+          font-size="20" font-weight="500" letter-spacing="10"
+          fill="#c89868">
+      a song of syx save analyzer
+    </text>
+  </g>
+
+  <!-- Bottom wedge frieze (centered, single row of 13) -->
+  <g transform="translate(420,242)">
+    <use href="#wedge" x="0"   y="0" width="16" height="12"/>
+    <use href="#wedge" x="24"  y="0" width="16" height="12"/>
+    <use href="#wedge" x="48"  y="0" width="16" height="12"/>
+    <use href="#wedge" x="72"  y="0" width="16" height="12"/>
+    <use href="#wedge" x="96"  y="0" width="16" height="12"/>
+    <use href="#wedge" x="120" y="0" width="16" height="12"/>
+    <use href="#wedge" x="144" y="0" width="16" height="12"/>
+    <use href="#wedge" x="168" y="0" width="16" height="12"/>
+    <use href="#wedge" x="192" y="0" width="16" height="12"/>
+    <use href="#wedge" x="216" y="0" width="16" height="12"/>
+    <use href="#wedge" x="240" y="0" width="16" height="12"/>
+    <use href="#wedge" x="264" y="0" width="16" height="12"/>
+    <use href="#wedge" x="288" y="0" width="16" height="12"/>
+  </g>
+</svg>

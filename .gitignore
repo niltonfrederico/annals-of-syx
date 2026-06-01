@@ -1,0 +1,14 @@
+.gradle/
+build/
+*.iml
+.idea/
+.claude/
+CLAUDE.md
+.memories/
+# Local workspace: copies of the game jar/assets and user saves.
+# Keep the directory skeleton tracked via .gitkeep, ignore everything else.
+.source/game/*
+!.source/game/.gitkeep
+.source/saves/*
+!.source/saves/.gitkeep
+docs/archived/
