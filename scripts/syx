@@ -11,7 +11,7 @@ set -euo pipefail
 #   - xvfb-run is required because CORE.create() opens a real GLFW window
 #     via LWJGL, even in our headless flow.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # shellcheck disable=SC2012
