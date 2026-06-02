@@ -57,11 +57,21 @@ public final class StatsDumper {
         return out;
     }
 
+    // Races with zero settlement population are filtered from happiness /
+    // loyalty / fulfillment / expectation / loyalty_target outputs. The
+    // engine returns BEHAVIOUR().HAPPI defaults (commonly 1.0) for empty
+    // races, which would otherwise look like "all 8 races are happy" in
+    // the dump — a misleading reading when 6 of them aren't even present.
+    private static boolean racePresent(Race r) {
+        return STATS.POP().POP.data().get(r) > 0;
+    }
+
     // Happiness/loyalty are CITIZEN-only standings in StandingCitizen — they
     // have no HCLASS dimension. Shape is Race.key -> double (0..1).
     public static Map<String, Double> happinessByRace() {
         Map<String, Double> out = new LinkedHashMap<>();
         for (Race r : RACES.all()) {
+            if (!racePresent(r)) continue;
             out.put(r.key, STANDINGS.CITIZEN().happiness.getD(r));
         }
         return out;
@@ -70,18 +80,25 @@ public final class StatsDumper {
     public static Map<String, Double> loyaltyByRace() {
         Map<String, Double> out = new LinkedHashMap<>();
         for (Race r : RACES.all()) {
+            if (!racePresent(r)) continue;
             out.put(r.key, STANDINGS.CITIZEN().loyalty.getD(r));
         }
         return out;
     }
 
     // Smoothed scalars StandingCitizen tracks alongside happiness/loyalty.
-    // fulfillment: total summed modifier score (0..1), input to happiness.
-    // expectation: population-driven demand (0..1), divisor of fulfillment.
-    // loyalty_target: happiness * LOYALTY boost; loyalty slowly drifts to it.
+    // Read these together — the absolute numbers look tiny in isolation
+    // but compose like this in the engine (StandingCitizen.hap):
+    //   happiness = (fulfillment / expectation) * HAPPI_boost, clamped [0,1]
+    // So fulfillment=0.015 with expectation=0.017 and HAPPI_boost≈1.1
+    // produces happiness=1.0 — the *ratio* matters, not absolute values.
+    //   - fulfillment: weighted sum of standing contributions (small early game).
+    //   - expectation: population-driven demand (grows with pop).
+    //   - loyalty_target: happiness * LOYALTY boost; loyalty drifts toward it.
     public static Map<String, Double> fulfillmentByRace() {
         Map<String, Double> out = new LinkedHashMap<>();
         for (Race r : RACES.all()) {
+            if (!racePresent(r)) continue;
             out.put(r.key, STANDINGS.CITIZEN().fullfillment.getD(r));
         }
         return out;
@@ -90,6 +107,7 @@ public final class StatsDumper {
     public static Map<String, Double> expectationByRace() {
         Map<String, Double> out = new LinkedHashMap<>();
         for (Race r : RACES.all()) {
+            if (!racePresent(r)) continue;
             out.put(r.key, STANDINGS.CITIZEN().expectation.getD(r));
         }
         return out;
@@ -98,19 +116,39 @@ public final class StatsDumper {
     public static Map<String, Double> loyaltyTargetByRace() {
         Map<String, Double> out = new LinkedHashMap<>();
         for (Race r : RACES.all()) {
+            if (!racePresent(r)) continue;
             out.put(r.key, STANDINGS.CITIZEN().loyaltyTarget.getD(r));
         }
         return out;
     }
 
     // Per-stat fulfillment breakdown for CITIZEN class:
-    // race.key -> stat.key -> {name, current, max, dismiss}.
+    // race.key -> stat.key -> {name, current, max, dismiss, inverted}.
     // current/max are the modifier contributions UI shows as bars (StatRow:104-107).
     // Sum of `current` across stats ≈ what feeds Fulfillment.fullfillment(r).
+    //
+    // CRITICAL: how to read `current` depends on `inverted` (StandingDef:230,
+    // formula in StatStanding.get:139-145):
+    //   d = clamp(raw_input, 0, 1)
+    //   if (inverted) d = 1 - d
+    //   return d * max
+    //
+    // - inverted=false (coverage / provision stats — FURNITURE, CLOTHES,
+    //   FOOD_RATIONS, RETIREMENT, ...): `current=max` means fully
+    //   provisioned, `current=0` means none. Gap (max-current) is the
+    //   upside left on the table.
+    // - inverted=true (avoidance-of-bad stats — BATTLE_BESIEGED,
+    //   FOOD_STARVATION, BURIAL_DESECRATION, ENVIRONMENT_CANNIBALISM,
+    //   POPULATION_WRONGFUL_DEATHS, ...): `current=max` means the bad
+    //   thing is NOT happening (full bonus from absence), `current=0`
+    //   means the bad thing is maxed out. A maxed value here is GOOD; a
+    //   zero value here is the actual crisis flag. The "INVERTED: true"
+    //   declarations live in data.zip:data/assets/init/stats/loyalty/VANILLA.txt.
     public static Map<String, Map<String, Map<String, Object>>> fulfillmentBreakdownByRace() {
         HCLASS cl = HCLASSES.CITIZEN();
         Map<String, Map<String, Map<String, Object>>> out = new LinkedHashMap<>();
         for (Race r : RACES.all()) {
+            if (!racePresent(r)) continue;
             Map<String, Map<String, Object>> per = new LinkedHashMap<>();
             for (STAT ss : r.stats().standings(cl)) {
                 Map<String, Object> row = new LinkedHashMap<>();
@@ -118,6 +156,7 @@ public final class StatsDumper {
                 row.put("current", ss.standing().get(cl, r));
                 row.put("max", ss.standing().definition(r).get(cl).max);
                 row.put("dismiss", ss.standing().definition(r).get(cl).dismiss);
+                row.put("inverted", ss.standing().definition(r).inverted);
                 per.put(ss.key(), row);
             }
             out.put(r.key, per);
@@ -146,6 +185,7 @@ public final class StatsDumper {
     public static Map<String, Map<String, Double>> workFulfillmentByRaceAndClass() {
         Map<String, Map<String, Double>> out = new LinkedHashMap<>();
         for (Race r : RACES.all()) {
+            if (!racePresent(r)) continue;
             Map<String, Double> per = new LinkedHashMap<>();
             for (HCLASS c : HCLASSES.ALL()) {
                 per.put(c.key, STATS.WORK().WORK_FULFILLMENT.data(c).getD(r));
@@ -155,15 +195,34 @@ public final class StatsDumper {
         return out;
     }
 
-    // Deaths by cause: cause.key -> total count across all classes/races.
-    // Source: STATS.POP().COUNT.leaves() (StatsDeath.PopData per CAUSE_LEAVE
-    // index). statistics(null).get(null) yields the all-time total.
-    public static Map<String, Integer> deathsByCause() {
+    // Deaths by cause — rolling-window snapshot, NOT lifetime.
+    // STATS.POP().COUNT.leaves().get(c).statistics(null) is a
+    // HISTORY_COLLECTION<Race>; `.get(null)` reads its current bucket and
+    // `.total()` exposes the underlying HISTORY_INT (32-day rolling
+    // ringbuffer, see STATS.DAYS_SAVED). The previous "total" reading was
+    // misleading: it gave the count for "now" only, so a city with a
+    // historic raid showed deaths.SLAYED=0 the moment the bucket rolled
+    // past. We expose two honest views instead:
+    //   - deaths_today:        last bucket per cause.
+    //   - deaths_history_8d:   8 most recent daily buckets per cause
+    //                          (index 0 = today, growing into the past).
+    // The engine does NOT keep an all-time deaths-by-cause counter; the
+    // closest lifetime data is in `counters.COUNT_ACCIDENTS` /
+    // `COUNT_ROYALTIES_KILLED`, which only cover a narrow subset.
+    public static Map<String, Integer> deathsToday() {
         Map<String, Integer> out = new LinkedHashMap<>();
         for (CAUSE_LEAVE c : CAUSE_LEAVES.ALL()) {
             if (!c.death) continue;
-            int total = STATS.POP().COUNT.leaves().get(c.index()).statistics(null).get(null);
-            out.put(c.key, total);
+            out.put(c.key, STATS.POP().COUNT.leaves().get(c.index()).statistics(null).get(null));
+        }
+        return out;
+    }
+
+    public static Map<String, List<Integer>> deathsHistory8d() {
+        Map<String, List<Integer>> out = new LinkedHashMap<>();
+        for (CAUSE_LEAVE c : CAUSE_LEAVES.ALL()) {
+            if (!c.death) continue;
+            out.put(c.key, historyInt8d(STATS.POP().COUNT.leaves().get(c.index()).statistics(null).total()));
         }
         return out;
     }
@@ -173,6 +232,15 @@ public final class StatsDumper {
     // RoomBlueprintIns to get instance count, area, employment, degrade.
     // Blueprints that aren't Ins (rare; some singletons) are recorded with
     // count=0/area=0 and a "kind" hint so they're still discoverable.
+    //
+    // CAUTION on employees_max for system rooms (key starts with `_`):
+    // `_STOCKPILE`, `_HAULER`, `_BUILDER`, `_JANITOR`, `_EXPORT`, `_SLAVER`,
+    // etc. are not real buildings — they're pseudo-rooms representing
+    // settlement-wide policies/capacities. Their `employees_max` is a
+    // policy-derived target (e.g. `_STOCKPILE` reports total storage tiles,
+    // not worker slots). Treating `(max - current) / max` as
+    // "% understaffed" yields nonsense for these. Compare worker fill
+    // only on rooms whose key does NOT start with `_`.
     public static Map<String, Map<String, Object>> roomsCensus() {
         Map<String, Map<String, Object>> out = new LinkedHashMap<>();
         for (RoomBlueprint bp : SETT.ROOMS().collection.all()) {
@@ -278,8 +346,12 @@ public final class StatsDumper {
     // Disease snapshot. The engine doesn't expose a simple "N sick" count via
     // public API — sick()/incubating() are STATs whose per-Induvidual storage
     // would require iterating pops. Health history is the cheap, available
-    // signal: a settlement-wide score (units: engine-internal, watch for
-    // direction in patches).
+    // signal: settlement-wide HEALTH boostable score (`StatsDisease:29`,
+    // value = BOOSTABLES.PHYSICS().HEALTH / 1024). Baseline is ~1.0 and
+    // there is no upper cap — values above 1.0 mean healthier than
+    // baseline (boost from baths/physicians), values below 1.0 mean
+    // worse (disease pressure, no hospital coverage). Index 0 = today,
+    // growing into the past.
     public static Map<String, Object> diseaseSnapshot() {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Double> hist = new ArrayList<>(8);
@@ -320,13 +392,29 @@ public final class StatsDumper {
         return out;
     }
 
-    // Production / consumption flows from the player faction's resource ledger.
-    // FResources splits each RTYPE into in() (positive deltas) and out()
-    // (negative deltas, stored as positive). Net flow = in - out. We dump in
-    // and out separately per resource for the 8-day window so callers can
-    // recover both gross and net. Only PRODUCED / CONSUMED / TRADE are
-    // included — the other RTYPEs (TAX, MAINTENANCE, SPOILAGE, etc.) are
-    // available but bloat the dump; add on demand.
+    // Production / consumption / trade flows from the player faction's
+    // resource ledger (8-day window, index 0 = today, growing into past).
+    //
+    // FResources.inc(res, type, am) routes signed deltas into two
+    // per-RTYPE histograms: positive deltas go to in(t), negative deltas
+    // are stored as positive magnitude in out(t). So for ANY RTYPE:
+    //   in[i]  = amount gained on day i (added to player's resource pool)
+    //   out[i] = amount lost on day i (removed from the pool)
+    //   net[i] = in[i] - out[i]
+    //
+    // Per-RTYPE usage patterns (one side usually dominates):
+    //   PRODUCED: in = produced amount, out = production rollbacks/waste
+    //             (rare; usually near 0). Use in - out for true output.
+    //   CONSUMED: in = usually 0 (you don't "un-consume"),
+    //             out = consumption amount. Use out directly.
+    //   TRADE:    in = bought from traders, out = sold to traders.
+    //             Both can be active on the same resource within a day.
+    //             Use net to see net trade balance.
+    //
+    // Only PRODUCED / CONSUMED / TRADE are dumped — the other RTYPEs
+    // (TAX, MAINTENANCE, SPOILAGE, CONSTRUCTION, EQUIPPED, ARMY_SUPPLY,
+    // SPOILS, DIPLOMACY, THEFT) are available in FResources but bloat
+    // the dump; add on demand.
     public static Map<String, Map<String, Map<String, List<Integer>>>> resourceFlows8d() {
         Map<String, Map<String, Map<String, List<Integer>>>> out = new LinkedHashMap<>();
         RTYPE[] tracked = { RTYPE.PRODUCED, RTYPE.CONSUMED, RTYPE.TRADE };
@@ -338,9 +426,14 @@ public final class StatsDumper {
                 List<Integer> inH = historyInt8d(inFlow.history(res));
                 List<Integer> outH = historyInt8d(outFlow.history(res));
                 if (allZero(inH) && allZero(outH)) continue;
+                List<Integer> netH = new ArrayList<>(8);
+                for (int i = 0; i < 8; i++) {
+                    netH.add(inH.get(i) - outH.get(i));
+                }
                 Map<String, List<Integer>> row = new LinkedHashMap<>();
                 row.put("in", inH);
                 row.put("out", outH);
+                row.put("net", netH);
                 byRes.put(res.key, row);
             }
             out.put(t.name(), byRes);
@@ -458,7 +551,8 @@ public final class StatsDumper {
         out.put("fulfillment_breakdown", fulfillmentBreakdownByRace());
         out.put("religion", religionFollowersByRace());
         out.put("work_fulfillment", workFulfillmentByRaceAndClass());
-        out.put("deaths", deathsByCause());
+        out.put("deaths_today", deathsToday());
+        out.put("deaths_history_8d", deathsHistory8d());
         out.put("rooms", roomsCensus());
         out.put("stockpile", stockpileByResource());
         out.put("law", lawSnapshot());
@@ -474,11 +568,20 @@ public final class StatsDumper {
         return out;
     }
 
+    // _meta block. The two time fields are NOT the same thing:
+    //   played_ingame_seconds = spec.playSeconds — simulated game-time
+    //     (accumulated TIME.secondsPerDay() ticks). Used by the game UI
+    //     to compute in-game years via:
+    //       years = playSeconds / (secondsPerHour * hoursPerDay * 16)
+    //   counters.COUNT_TIME_PLAYED.current = real wall-clock seconds
+    //     spent playing (persisted across sessions).
+    // Default game speed makes ingame ≈ 60× wallclock, but the player
+    // can change speed or pause — never assume a constant ratio.
     private static Map<String, Object> meta(GameSpec spec, Path savePath) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("save_path", savePath.toAbsolutePath().toString());
         m.put("save_version", String.format("0.%d.%d", (spec.version >> 16) & 0xFF, spec.version & 0xFF));
-        m.put("save_played_seconds", (long) spec.playSeconds);
+        m.put("played_ingame_seconds", (long) spec.playSeconds);
         m.put("race", spec.race.toString());
         m.put("city", spec.city.toString());
         m.put("ruler", spec.ruler.toString());

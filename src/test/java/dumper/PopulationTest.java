@@ -78,11 +78,13 @@ class PopulationTest {
         if (religion.isEmpty()) throw new AssertionError("religionFollowersByRace returned empty");
         Map<String, Map<String, Double>> work = StatsDumper.workFulfillmentByRaceAndClass();
         if (work.isEmpty()) throw new AssertionError("workFulfillmentByRaceAndClass returned empty");
-        Map<String, Integer> deaths = StatsDumper.deathsByCause();
-        // Deaths can legitimately be empty for a fresh game; just print, don't fail.
+        Map<String, Integer> deathsToday = StatsDumper.deathsToday();
+        Map<String, java.util.List<Integer>> deathsHist = StatsDumper.deathsHistory8d();
+        // Death counts can legitimately be empty for a fresh game; just print, don't fail.
         System.out.println("RELIGION: " + religion.size() + " " + religion);
         System.out.println("WORK: " + work.size() + " " + work);
-        System.out.println("DEATHS: " + deaths.size() + " " + deaths);
+        System.out.println("DEATHS_TODAY: " + deathsToday.size() + " " + deathsToday);
+        System.out.println("DEATHS_HISTORY_8D: " + deathsHist.size() + " entries");
         return playerTotal;
     }
 

@@ -91,27 +91,62 @@ Top-level keys (abbreviated):
 
 ```json
 {
-  "_meta":                { "save_path", "save_version", "race", "city", "pop_total", ... },
+  "_meta":                { "save_path", "save_version", "played_ingame_seconds": <long>, "race", "city", "ruler", "pop_total" },
   "population":           { "<race>": { "<hclass>": <int> } },
   "happiness":            { "<race>": <double 0..1> },
   "loyalty":              { "<race>": <double 0..1> },
   "fulfillment":          { "<race>": <double 0..1> },
-  "fulfillment_breakdown":{ "<race>": { "<stat>": { ... } } },
+  "fulfillment_breakdown":{ "<race>": { "<stat>": { "name": "<str>", "current": <double>, "max": <double>, "dismiss": <bool>, "inverted": <bool> } } },
   "religion":             { "<religion>": { "<race>": <int> } },
   "work_fulfillment":     { "<race>": { "<hclass>": <double 0..1> } },
-  "deaths":               { "<cause>": <int> },
+  "deaths_today":         { "<cause>": <int> },
+  "deaths_history_8d":    { "<cause>": [<int>×8] },
   "rooms":                { "<bp>": { ... } },
   "stockpile":            { "<resource>": <int> },
   "law":                  { ... },
   "disease":              { "health_history_8d": [...] },
   "counters":             { "<gcount>": { ... } },
   "treasury":             { ... },
-  "resource_flows":       { ... },
+  "resource_flows":       { "PRODUCED"|"CONSUMED"|"TRADE": { "<resource>": { "in": [<int>×8], "out": [<int>×8], "net": [<int>×8] } } },
   "edicts":               { ... },
   "tech":                 { ... },
   "service_coverage":     { ... }
 }
 ```
+
+**Reading `fulfillment_breakdown[*]` correctly depends on `inverted`.**
+The engine formula (`StatStanding.get`) is `d = clamp(input,0,1); if
+inverted: d = 1-d; current = d * max`. Two distinct readings:
+
+- `inverted: false` — coverage / provision stats (`HOME_FURNITURE`,
+  `EQUIP_CIVIC_CLOTHES`, `FOOD_FOOD_RATIONS`, `WORK_RETIREMENT`, ...).
+  `current = max` means fully provisioned; `current = 0` means none.
+  `max - current` is the headroom.
+- `inverted: true` — avoidance-of-bad stats (`BATTLE_BESIEGED`,
+  `FOOD_STARVATION`, `BURIAL_DESECRATION`, `ENVIRONMENT_CANNIBALISM`,
+  `POPULATION_WRONGFUL_DEATHS`, ...). `current = max` means the bad
+  thing is **not** happening (full bonus from absence); `current = 0`
+  is the actual crisis flag. **A maxed inverted stat is good news**, not
+  a maxed penalty. The source of truth for which stats are inverted is
+  `data.zip:data/assets/init/stats/loyalty/VANILLA.txt` in the game
+  install.
+
+**Time fields are not interchangeable.**
+`_meta.played_ingame_seconds` is simulated game-time (accumulated
+`TIME.secondsPerDay()` ticks). `counters.COUNT_TIME_PLAYED.current`
+is real wall-clock seconds spent playing. Default game speed makes
+ingame ≈ 60× wallclock, but the player can change speed or pause —
+never assume a constant ratio. Convert to in-game years with
+`played_ingame_seconds / (secondsPerHour * hoursPerDay * 16)` (engine
+formula from `MenuScreenLoad`).
+
+**Reading `resource_flows`:** for any RTYPE, `in` = gained on that
+day, `out` = lost on that day (positive magnitude), `net = in - out`.
+Per-RTYPE dominant side: `PRODUCED.in` = produced amount (out is
+usually 0); `CONSUMED.out` = consumed amount (in is usually 0);
+`TRADE.in` = bought, `TRADE.out` = sold (both active on the same
+resource within a day). Race / hclass filters: only races with
+settlement population > 0 appear in race-keyed blocks.
 
 ## Tests
 
